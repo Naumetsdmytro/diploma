@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Tech Check Links</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+        .admin-page {
+            max-width: 560px;
+            margin: 48px auto;
+            padding: 24px;
+            text-align: left;
+        }
+
+        .admin-page h1 {
+            margin-bottom: 8px;
+        }
+
+        .admin-page p {
+            margin-bottom: 24px;
+        }
+
+        .admin-field {
+            margin-bottom: 16px;
+        }
+
+        .admin-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .admin-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .admin-message {
+            margin-top: 16px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .admin-message.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .admin-message.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-page">
+        <h1>Admin settings</h1>
+        <p>Set the Google Meet lesson link and the link used when tech check fails.</p>
+
+        <form id="admin-form">
+            <div class="admin-field">
+                <label for="password">Admin password</label>
+                <input id="password" name="password" type="password" required autocomplete="current-password" />
+            </div>
+            <div class="admin-field">
+                <label for="meetingLink">Lesson / Google Meet link</label>
+                <input id="meetingLink" name="meetingLink" type="url" required value="<%= meetingLink %>" />
+            </div>
+            <div class="admin-field">
+                <label for="failureLink">Tech check failed link</label>
+                <input id="failureLink" name="failureLink" type="url" required value="<%= failureLink %>" />
+            </div>
+            <button class="form__btn" type="submit">Save settings</button>
+        </form>
+
+        <div id="admin-message" class="admin-message"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById("admin-form");
+        const messageEl = document.getElementById("admin-message");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            messageEl.className = "admin-message";
+            messageEl.textContent = "";
+
+            const body = {
+                password: form.password.value,
+                meetingLink: form.meetingLink.value.trim(),
+                failureLink: form.failureLink.value.trim(),
+            };
+
+            try {
+                const response = await fetch("/admin/settings", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to save settings");
+                }
+
+                messageEl.textContent = "Settings saved successfully.";
+                messageEl.classList.add("success");
+            } catch (error) {
+                messageEl.textContent = error.message;
+                messageEl.classList.add("error");
+            }
+        });
+    </script>
+</body>
+
+</html>

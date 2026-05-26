@@ -1,18 +1,12 @@
+const MODEL_URL = "/face-api-models/models";
+
 export class VideoInspector {
-  #startVideoDetection() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        const video = document.querySelector("video");
-        if ("srcObject" in video) {
-          video.srcObject = stream;
-        } else {
-          video.src = window.URL.createObjectURL(stream);
-        }
-      })
-      .catch((error) => {
-        console.error("Error accessing camera:", error);
-      });
+  getUserACId() {
+    const segment = window.location.pathname.split("/").filter(Boolean)[0];
+    if (!segment || segment === "admin") {
+      return null;
+    }
+    return segment;
   }
 
   handleCameraResult(result) {
@@ -22,67 +16,114 @@ export class VideoInspector {
     );
 
     if (result) {
+      this.#persistCheck("camera", true);
       videoContainerEl.style.display = "none";
       microContainerEl.style.display = "flex";
+    } else {
+      this.#persistCheck("camera", false);
     }
   }
 
-  getUserACId() {
-    const currentUrl = window.location.href;
-    const match = currentUrl.match(/\/(\w+)(?:\?.*)?$/);
-    if (match) {
-      return match[1];
-    }
-    return null;
+  #persistCheck(step, passed) {
+    const userId = this.getUserACId();
+    if (!userId) return;
+
+    fetch(`/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [step]: passed }),
+    }).catch((error) => console.error(`Failed to save ${step} result:`, error));
   }
 
-  inspect() {
+  async inspect() {
     const cameraCheckBtn = document.querySelector("#camera-check-btn");
+    const videoEl = document.getElementById("video");
+    const faceapi = window.faceapi;
+    const originalLabel = cameraCheckBtn?.textContent || "Check my camera";
+
+    if (!cameraCheckBtn) {
+      console.error("Camera check button not found");
+      return;
+    }
+    if (!videoEl) {
+      console.error("Video element not found");
+      return;
+    }
+    if (!faceapi) {
+      console.error("face-api.js is not loaded — refresh the page");
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      console.error("Camera is not supported in this browser");
+      return;
+    }
+
     cameraCheckBtn.disabled = true;
+
     const timeoutInSeconds = 25;
+    let intervalId;
+    let timeoutId;
+    let stream;
 
-    Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri("../../face-api-models/models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri(
-        "../../face-api-models/models"
-      ),
-      faceapi.nets.faceRecognitionNet.loadFromUri(
-        "../../face-api-models/models"
-      ),
-      faceapi.nets.faceExpressionNet.loadFromUri(
-        "../../face-api-models/models"
-      ),
-    ]).then(this.#startVideoDetection);
+    const cleanup = () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    };
 
-    const intervalId = setInterval(async () => {
-      const detections = await faceapi
-        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions();
+    const resetUi = () => {
+      cleanup();
+      cameraCheckBtn.disabled = false;
+      cameraCheckBtn.textContent = originalLabel;
+    };
 
-      if (detections.length > 0) {
-        clearInterval(intervalId);
-        clearTimeout(timeoutId);
+    try {
+      cameraCheckBtn.textContent = "Allow camera access...";
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoEl.srcObject = stream;
+      await videoEl.play();
 
-        this.handleCameraResult(true);
-      }
-    }, 2000);
+      cameraCheckBtn.textContent = "Loading face detection...";
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 
-    let reloadPage = false;
+      cameraCheckBtn.textContent = "Look at the camera...";
 
-    const timeoutId = setTimeout(async () => {
-      try {
-        this.handleCameraResult(false);
+      intervalId = setInterval(async () => {
+        try {
+          const detections = await faceapi.detectAllFaces(
+            videoEl,
+            new faceapi.TinyFaceDetectorOptions()
+          );
 
-        reloadPage = true;
-
-        clearInterval(intervalId);
-      } finally {
-        if (reloadPage) {
-          const currentURL = window.location.href;
-          window.location.href = `${currentURL}&techCheck=failed`;
+          if (detections.length > 0) {
+            cleanup();
+            if (stream) {
+              stream.getTracks().forEach((track) => track.stop());
+            }
+            this.handleCameraResult(true);
+          }
+        } catch (error) {
+          console.error("Face detection error:", error);
         }
+      }, 2000);
+
+      timeoutId = setTimeout(() => {
+        cleanup();
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
+        this.handleCameraResult(false);
+        window.location.href = `${window.location.href}&techCheck=failed`;
+      }, timeoutInSeconds * 1000);
+    } catch (error) {
+      resetUi();
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
       }
-    }, timeoutInSeconds * 1000);
+      console.error("Camera check failed:", error);
+      cameraCheckBtn.textContent = "Camera blocked — try again";
+      setTimeout(() => {
+        cameraCheckBtn.textContent = originalLabel;
+      }, 3000);
+    }
   }
 }

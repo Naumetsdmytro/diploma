@@ -1,8 +1,8 @@
 const { createSchema, updateSchema } = require("./users");
-const { setDataSchema } = require("./spreadsheets");
+const { adminSettingsSchema } = require("./admin");
 
 module.exports = {
   createSchema,
   updateSchema,
-  setDataSchema,
+  adminSettingsSchema,
 };

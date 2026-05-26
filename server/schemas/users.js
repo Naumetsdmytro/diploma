@@ -5,17 +5,16 @@ const createSchema = Joi.object({
   loginCredential: Joi.string().required(),
   name: Joi.string().required(),
   googleName: Joi.string().required(),
-  meetingLink: Joi.string().required(),
-  mainRoomNumber: Joi.number().required(),
 });
 
 const updateSchema = Joi.object({
-  camera: Joi.boolean().required(),
-  microphone: Joi.boolean().required(),
-  audio: Joi.boolean().required(),
-  meetingLink: Joi.string().required(),
+  camera: Joi.boolean(),
+  microphone: Joi.boolean(),
+  audio: Joi.boolean(),
+  meetingLink: Joi.string().uri(),
   isPossibleToUsePhone: Joi.boolean(),
-});
+  overallStatus: Joi.string().valid("in_progress", "passed", "failed"),
+}).min(1);
 
 module.exports = {
   updateSchema,

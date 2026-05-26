@@ -31,28 +31,30 @@ cameraCheckButtonEl.addEventListener("click", () => {
   videoInspector.inspect();
 });
 
+function getUserACId() {
+  const segment = window.location.pathname.split("/").filter(Boolean)[0];
+  if (!segment || segment === "admin") {
+    return null;
+  }
+  return segment;
+}
+
+function techChecksPassed(user) {
+  return user.camera && user.microphone && user.audio;
+}
+
 qrProcceedBtnEl.addEventListener("click", async () => {
   const userId = getUserACId();
-  const response = await fetch(`users/${userId}`);
-  const user = await response.json();
-  const meetingLink = user.meetingLink;
-
-  const isFieldsAreTrue = Object.entries(user).every(
-    ([key, value]) => key === "isPossibleToUsePhone" || value
-  );
-
-  if (!isFieldsAreTrue) {
+  const response = await fetch(`/users/${userId}`);
+  if (!response.ok) {
     qrFailureMessage.style.display = "block";
     return;
   }
-  window.location.href = meetingLink;
-});
+  const user = await response.json();
 
-function getUserACId() {
-  const currentUrl = window.location.href;
-  const match = currentUrl.match(/\/(\w+)(?:\?.*)?$/);
-  if (match) {
-    return match[1];
+  if (!techChecksPassed(user)) {
+    qrFailureMessage.style.display = "block";
+    return;
   }
-  return null;
-}
+  window.location.href = user.meetingLink;
+});

@@ -647,6 +647,9 @@ canvas {
   box-sizing: border-box;
   border: 3.5px solid #8ebf56;
   border-radius: 10px;
+  width: 100%;
+  max-width: 691px;
+  height: 280px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset,
     rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset,
     rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,

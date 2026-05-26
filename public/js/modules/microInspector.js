@@ -23,6 +23,7 @@ export class MicroInspector {
     const issuesAudioLink = document.querySelector(".issues-audio-link");
 
     if (result) {
+      this.#persistCheck(true);
       audioContainerEl.style.display = "flex";
       microContainerEl.style.display = "none";
       this.messageDisplayed = true;
@@ -30,13 +31,25 @@ export class MicroInspector {
     }
   }
 
+  #persistCheck(passed) {
+    const userId = this.getUserACId();
+    if (!userId) return;
+
+    fetch(`/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ microphone: passed }),
+    }).catch((error) =>
+      console.error("Failed to save microphone result:", error)
+    );
+  }
+
   getUserACId() {
-    const currentUrl = window.location.href;
-    const match = currentUrl.match(/\/(\w+)(?:\?.*)?$/);
-    if (match) {
-      return match[1];
+    const segment = window.location.pathname.split("/").filter(Boolean)[0];
+    if (!segment || segment === "admin") {
+      return null;
     }
-    return null;
+    return segment;
   }
 
   inspect() {

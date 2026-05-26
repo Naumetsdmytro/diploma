@@ -1,17 +1,10 @@
 import { setContactToFailedList } from "./modules/setContactToFailedList.js";
 
-/** No Google Sheet — change this to your real Meet / demo URL after audio check */
-const DEMO_MEETING_LINK = "https://meet.google.com/";
-const DEMO_ROOM_COUNT = 1;
-
 function debugLog(msg) {
   console.log(`[${new Date().toISOString()}] ${msg}`);
 }
 
-// ELEMENTS
-const timerContainer = document.querySelector(".countdown");
 const signInContainer = document.querySelector(".signIn");
-const noEduguest = document.querySelector(".no-eduquest");
 const techCheckContainer = document.querySelector(".tech-check");
 const techCameraContainer = document.querySelector(".tech-camera-container");
 const techMicroContainer = document.querySelector(".tech-microphone-container");
@@ -24,183 +17,115 @@ const audioButton = document.querySelector("#audio-check-btn");
 const audioFailureTextEl = document.querySelector(".audio-failure-text");
 const form = document.querySelector(".form");
 const emailInput = document.querySelector("#emailAddress");
-const spinners = document.querySelectorAll(".spinner");
 const headerTitles = document.querySelectorAll(".heading__title");
 const signInButton = document.querySelector(".signIn-google");
 const issuesAudioLink = document.querySelector(".issues-audio-link");
 
-// ETC VARIABLES
-let roomNumber = DEMO_ROOM_COUNT;
-let links = [DEMO_MEETING_LINK];
+let appConfig = { meetingLink: "", failureLink: "" };
 let googleName = "";
-/** After Join succeeded — blocks any late UI from flipping back to the form */
 let joinFlowStarted = false;
 
 const joinButton = form.elements.joinButton;
 joinButton.disabled = true;
 
-// PARAMS
 export function getParamValue(param) {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get(param);
 }
 
+async function loadAppConfig() {
+  const response = await fetch("/api/config");
+  if (!response.ok) {
+    throw new Error(`Failed to load config: HTTP ${response.status}`);
+  }
+  appConfig = await response.json();
+  localStorage.setItem("failureLink", appConfig.failureLink);
+  if (issuesAudioLink) {
+    issuesAudioLink.href = appConfig.failureLink;
+  }
+}
+
 function showSignInForm() {
   if (joinFlowStarted) {
-    debugLog("showSignInForm skipped (joinFlowStarted) ");
     return;
   }
 
-  debugLog("showSignInForm: showing name/email form");
   headerTitles.forEach((title) => {
     title.textContent = "Tech check";
   });
 
-  localStorage.setItem("failureLink", DEMO_MEETING_LINK);
-
-  timerContainer.style.display = "none";
-  noEduguest.style.display = "none";
   signInContainer.style.display = "block";
   joinButton.disabled = false;
 }
 
-// Log native validation failures (no submit handler run if invalid)
-form.addEventListener(
-  "invalid",
-  (e) => {
-    const t = e.target;
-    debugLog(
-      `Native validation blocked submit: ${t.name || t.id} — ${t.validationMessage}`
-    );
-  },
-  true
-);
-
-// "JOIN"-FORM SUBMIT
 form.addEventListener("submit", onJoinFormSubmit);
 
 async function onJoinFormSubmit(evt) {
   evt.preventDefault();
 
-  debugLog("Join clicked: submit handler running");
-
   const name = form.elements.name.value;
   const processName = name.split(" ").length > 1 ? name : "";
   const email = form.elements.email.value;
-  const loginCredential = email ? email : getUserACId();
-
-  const room = await getRandomNumber(roomNumber);
-  const meetingLink = links[room - 1];
-  debugLog(`room=${room} meetingLink=${meetingLink ? "ok" : "MISSING"}`);
-  if (!meetingLink) {
-    debugLog("ABORT: no meeting link for room");
-    console.error("No meeting link for assigned room.");
-    return;
-  }
 
   joinButton.disabled = true;
 
-  fetch("/isEduquestActive")
-    .then((response) => {
-      debugLog(`/isEduquestActive status=${response.status}`);
-      if (!response.ok) {
-        throw new Error(`isEduquestActive HTTP ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(async (res) => {
-      const data = res.data;
-      debugLog(`isEduquestActive data[0]=${data && data[0]} redirect=${data && data[1]}`);
-      if (!data) {
-        throw new Error("isEduquestActive: missing data");
-      }
-      if (data[0] === true) {
-        const urlId = generateIdForURL();
-        debugLog(`urlId=${urlId} (after generateIdForURL)`);
+  try {
+    await loadAppConfig();
 
-        const response = await fetch("/users");
-        const users = await response.json();
-
-        const user = users.find((user) => user.id === urlId);
-        if (!user) {
-          const postRes = await fetch("/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: urlId,
-              googleName: googleName || " ",
-              name: processName || name.trim() || "Guest",
-              loginCredential,
-              meetingLink,
-              mainRoomNumber: room,
-            }),
-          });
-          if (!postRes.ok) {
-            const errBody = await postRes.json().catch(() => ({}));
-            debugLog(`POST /users FAILED: ${JSON.stringify(errBody)}`);
-            console.error("Could not create user:", errBody);
-            joinButton.disabled = false;
-            return;
-          }
-          debugLog("POST /users OK");
-        } else {
-          debugLog("user already exists in memory");
-        }
-
-        try {
-          if (typeof io !== "function") {
-            throw new Error(
-              "Socket.IO client not loaded. Use /socket.io/socket.io.js from this server."
-            );
-          }
-          socketConnection(urlId);
-          debugLog("socketConnection() OK");
-        } catch (err) {
-          debugLog(`socketConnection ERROR: ${err.message}`);
-          console.error(err);
-          joinButton.disabled = false;
-          return;
-        }
-
-        try {
-          setQRCodeElements();
-          debugLog("QRCode init OK");
-        } catch (err) {
-          debugLog(`QRCode init skipped (non-fatal): ${err.message}`);
-          console.error(err);
-        }
-
-        joinFlowStarted = true;
-        techCheckContainer.style.display = "block";
-        signInContainer.style.display = "none";
-        joinButton.disabled = false;
-        techCheckContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-        debugLog("SUCCESS: tech-check UI visible (Prepare Your Tech) — scrolled into view");
-      } else {
-        debugLog(`redirecting to baselink: ${data[1]}`);
-        window.location.href = data[1];
-      }
-    })
-    .catch((error) => {
-      debugLog(`Join flow ERROR: ${error.message}`);
-      console.log(error.message);
+    if (!appConfig.meetingLink) {
+      console.error("Meeting link is not configured. Ask admin to set it at /admin");
       joinButton.disabled = false;
+      return;
+    }
+
+    const urlId = getOrCreateUserId();
+    const loginCredential = email || urlId;
+
+    const postRes = await fetch("/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: urlId,
+        googleName: googleName || " ",
+        name: processName || name.trim() || "Guest",
+        loginCredential,
+      }),
     });
+    if (!postRes.ok) {
+      const errBody = await postRes.json().catch(() => ({}));
+      console.error("Could not create user:", errBody);
+      joinButton.disabled = false;
+      return;
+    }
+
+    markUrlAsJoined(urlId);
+
+    if (typeof io !== "function") {
+      throw new Error("Socket.IO client not loaded.");
+    }
+    socketConnection(urlId);
+    setQRCodeElements();
+
+    joinFlowStarted = true;
+    techCheckContainer.style.display = "block";
+    signInContainer.style.display = "none";
+    joinButton.disabled = false;
+    techCheckContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    debugLog(`Join flow ERROR: ${error.message}`);
+    console.error(error);
+    joinButton.disabled = false;
+  }
 }
 
 function setQRCodeElements() {
-  const cameraQRcode = new QRCode(document.getElementById("cameraQRcode"), {
+  new QRCode(document.getElementById("cameraQRcode"), {
     text: generateURL("camera"),
   });
 
-  const microphoneQRcode = new QRCode(
-    document.getElementById("microphoneQRcode"),
-    {
-      text: generateURL("microphone"),
-    }
-  );
+  new QRCode(document.getElementById("microphoneQRcode"), {
+    text: generateURL("microphone"),
+  });
 }
 
 function generateURL(parameter) {
@@ -222,8 +147,7 @@ function socketConnection(urlId) {
   });
 
   socket.on("cameraCheckFailed", () => {
-    const currentURL = window.location.href;
-    window.location.href = `${currentURL}&techCheck=failed`;
+    window.location.href = `${window.location.href}&techCheck=failed`;
   });
 
   socket.on("microphoneCheckPassed", () => {
@@ -232,46 +156,39 @@ function socketConnection(urlId) {
   });
 
   socket.on("microphoneCheckFailed", () => {
-    const currentURL = window.location.href;
-    window.location.href = `${currentURL}&techCheck=failed`;
+    window.location.href = `${window.location.href}&techCheck=failed`;
   });
 }
 
-async function getRandomNumber(maxNumber) {
-  const response = await fetch("/getNextRoomNumber", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      maxNumber,
-    }),
-  });
-  const { roomNumber: nextRoom } = await response.json();
-  return nextRoom;
+function getUserACId() {
+  const segment = window.location.pathname.split("/").filter(Boolean)[0];
+  if (!segment || segment === "admin") {
+    return null;
+  }
+  return segment;
 }
 
-function generateIdForURL() {
-  const currentUrl = window.location.href;
-  const idRegex = /\/(\d+)(?:\?.*)?/;
-  const hasId = currentUrl.match(idRegex);
-
-  if (!hasId) {
-    const searchParams = new URLSearchParams(window.location.search);
-
-    const pathname = window.location.pathname.endsWith("/")
-      ? window.location.pathname.slice(0, -1)
-      : window.location.pathname;
-
-    const id = generateUniqueId();
-    const newUrl = `${
-      window.location.origin
-    }${pathname}/${id}?${searchParams.toString()}&generatedId=true`;
-    window.history.replaceState({}, "", newUrl);
-    return id;
+function getOrCreateUserId() {
+  const existingId = getUserACId();
+  if (existingId) {
+    return existingId;
   }
 
-  return hasId[1];
+  const id = generateUniqueId();
+  const searchParams = new URLSearchParams(window.location.search);
+  const newUrl = `${window.location.origin}/${id}?${searchParams.toString()}`;
+  window.history.replaceState({}, "", newUrl);
+  return id;
+}
+
+function markUrlAsJoined(urlId) {
+  const searchParams = new URLSearchParams(window.location.search);
+  searchParams.set("generatedId", "true");
+  window.history.replaceState(
+    {},
+    "",
+    `${window.location.origin}/${urlId}?${searchParams.toString()}`
+  );
 }
 
 function generateUniqueId() {
@@ -281,7 +198,6 @@ function generateUniqueId() {
   );
 }
 
-// TECH-CHECK FORM SUBMIT
 audioForm.addEventListener("submit", onAudioFormSubmit);
 
 async function onAudioFormSubmit(evt) {
@@ -295,64 +211,50 @@ async function onAudioFormSubmit(evt) {
   audioButton.disabled = true;
 
   const userACId = getUserACId();
-
   const response = await fetch(`/users/${userACId}`);
-  const { meetingLink } = await response.json();
+  if (!response.ok) {
+    console.error("User not found. Please join again.");
+    audioButton.disabled = false;
+    return;
+  }
+  const user = await response.json();
 
   await fetch(`/users/${userACId}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       camera: true,
       microphone: true,
       audio: true,
-      meetingLink: meetingLink,
     }),
   });
 
   audioForm.reset();
-  window.location.href = meetingLink;
+  window.location.href = user.meetingLink;
 }
 
 function isValidInputValue(input) {
-  const validPattern = /^(21|twenty[ -]?one|2[ -]?1)$/;
-  //twenty-one, twenty one, 21, twentyone, 2 1
-
-  return validPattern.test(input);
+  return /^(21|twenty[ -]?one|2[ -]?1)$/.test(input);
 }
 
-function getUserACId() {
-  const currentUrl = window.location.href;
-  const match = currentUrl.match(/\/(\w+)(?:\?.*)?$/);
-  if (match) {
-    return match[1];
-  }
-  return null;
-}
-
-// GOOGLE SIGN IN
 signInButton.addEventListener("click", handleGoogleSignIn);
 
 function handleGoogleSignIn() {
-  const currentURL = window.location.href;
-  const parts = currentURL.split("/");
-  const userId = parts[parts.length - 1];
-
-  const redirectUrl = `/signin/google?userId=${userId}`;
-  window.location.href = redirectUrl;
+  const userId = getUserACId();
+  const query = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+  window.location.href = `/signin/google${query}`;
 }
 
-// URL PARAMS LOGIC
 async function paramsInterfaceLogic() {
   const techCheck = getParamValue("techCheck");
   const signInSuccess = getParamValue("signInSuccess");
   const generatedId = getParamValue("generatedId");
 
-  debugLog(
-    `init: techCheck=${techCheck} signInSuccess=${signInSuccess} generatedId=${generatedId} path=${window.location.pathname}`
-  );
+  try {
+    await loadAppConfig();
+  } catch (error) {
+    console.error(error);
+  }
 
   if (signInSuccess && !techCheck && !generatedId) {
     handleSuccessSignIn();
@@ -364,14 +266,31 @@ async function paramsInterfaceLogic() {
     handleTechCheckFailed();
   }
   if (generatedId) {
-    techCheckContainer.style.display = "block";
+    const urlId = getUserACId();
+    if (urlId) {
+      try {
+        const res = await fetch(`/users/${urlId}`);
+        if (!res.ok) {
+          showSignInForm();
+          return;
+        }
+        joinFlowStarted = true;
+        techCheckContainer.style.display = "block";
+        signInContainer.style.display = "none";
+        socketConnection(urlId);
+        setQRCodeElements();
+      } catch (error) {
+        console.error(error);
+        showSignInForm();
+      }
+    }
   }
 }
 
 paramsInterfaceLogic();
 
 function handleTechCheckFailed() {
-  failureLink.href = localStorage.getItem("failureLink") || DEMO_MEETING_LINK;
+  failureLink.href = appConfig.failureLink || localStorage.getItem("failureLink") || "#";
   signInButton.style.display = "none";
   signInContainer.style.display = "none";
   techCameraContainer.style.display = "none";
@@ -390,6 +309,5 @@ function handleSuccessSignIn() {
   }
 }
 
-//SET CONTACT TO THE TECH CHECK LIST
 failureLink.addEventListener("click", setContactToFailedList);
 issuesAudioLink.addEventListener("click", setContactToFailedList);

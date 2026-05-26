@@ -22,9 +22,15 @@ function startInspections() {
   const signInSuccess = getParamValue("signInSuccess");
 
   if (isDesktop && !cameraParam && !microParam) {
-    if (!signInSuccess) {
+    if (!signInSuccess && signInButtonEl) {
       signInButtonEl.style.display = "inline-flex";
     }
+
+    if (!cameraCheckButtonEl || !microCheckButtonEl) {
+      console.error("Tech check buttons not found in the DOM");
+      return;
+    }
+
     const videoInspector = new VideoInspector();
     const microInspector = new MicroInspector();
 

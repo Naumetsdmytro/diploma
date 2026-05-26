@@ -1,83 +1,111 @@
 const express = require("express");
-
+const AppSettings = require("../models/AppSettings");
+const User = require("../models/User");
 const { createSchema, updateSchema } = require("../schemas");
 const { HttpError } = require("../helpers");
+const { markTechCheckPassed } = require("../services/techCheck");
 
 const router = express.Router();
 
-const users = [];
-
-router.get("/", (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
+    const users = await User.find().sort({ createdAt: -1 }).limit(100);
     res.json(users);
   } catch (error) {
-    res.json(error.message);
+    next(error);
   }
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res, next) => {
+  try {
+    const user = await User.findOne({ id: req.params.id });
+    if (!user) {
+      throw HttpError(404, "Not found");
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/", async (req, res, next) => {
+  try {
+    const { error, value } = createSchema.validate(req.body);
+    if (error) {
+      throw HttpError(400, error.message);
+    }
+
+    const settings = await AppSettings.getSettings();
+    const existing = await User.findOne({ id: value.id });
+    if (existing) {
+      res.status(200).json(existing);
+      return;
+    }
+
+    const user = await User.create({
+      ...value,
+      meetingLink: settings.meetingLink,
+      failureLink: settings.failureLink,
+    });
+
+    console.log("[POST /users] created user id:", user.id);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = users.find((user) => user.id === id);
+    const { error, value } = updateSchema.validate(req.body);
+    if (error) {
+      throw HttpError(400, error.message);
+    }
+
+    const user = await User.findOne({ id });
     if (!user) {
       throw HttpError(404, "Not found");
     }
 
-    res.status(200).json(user);
-  } catch (error) {
-    const { status = 500, message = "Server error" } = error;
-    res.status(status).json(message);
-  }
-});
-
-router.post("/", (req, res) => {
-  try {
-    const data = req.body;
-
-    const { error } = createSchema.validate(data);
-    if (error) {
-      console.error("[POST /users] validation failed:", error.message, "body:", data);
-      throw HttpError(404, error.message);
-    }
-    console.log("[POST /users] created user id:", data.id);
-    const user = {
-      ...data,
-      camera: false,
-      microphone: false,
-      audio: false,
-      isPossibleToUsePhone: true,
-    };
-    users.push(user);
-
-    res.status(201).json(user);
-  } catch (error) {
-    const { status = 500, message = "Server error" } = error;
-    res.status(status).json(message);
-  }
-});
-
-router.put("/:id", (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-
-    const { error } = updateSchema.validate(data);
-    if (error) {
-      throw HttpError(404, error.message);
+    if (value.audio === true && value.camera === true && value.microphone === true) {
+      const updated = await markTechCheckPassed(id);
+      res.status(200).json(updated);
+      return;
     }
 
-    const index = users.findIndex((user) => user.id === id);
-    if (index === -1) {
-      throw HttpError(400, "Bad request");
+    const techCheckUpdate = {};
+    if (value.camera === true) {
+      techCheckUpdate["techCheck.camera"] = {
+        passed: true,
+        checkedAt: new Date(),
+        device: "desktop",
+      };
     }
-    const user = users[index];
+    if (value.microphone === true) {
+      techCheckUpdate["techCheck.microphone"] = {
+        passed: true,
+        checkedAt: new Date(),
+        device: "desktop",
+      };
+    }
+    if (value.audio === true) {
+      techCheckUpdate["techCheck.audio"] = {
+        passed: true,
+        checkedAt: new Date(),
+        device: "desktop",
+      };
+    }
 
-    users[index] = { ...user, ...data };
+    const updated = await User.findOneAndUpdate(
+      { id },
+      { $set: { ...value, ...techCheckUpdate } },
+      { returnDocument: "after" }
+    );
 
-    res.status(200).json(users[index]);
+    res.status(200).json(updated);
   } catch (error) {
-    const { status = 500, message = "Server error" } = error;
-    res.status(status).json(message);
+    next(error);
   }
 });
 
