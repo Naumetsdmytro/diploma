@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <h1 class="qr-title">Microphone</h1>
+    <div class="qr-microphone-container">
+        <p class="tech-instructions">Let's check your microphone.
+            <span>Click the button and read aloud the displayed sentence.</span> We'll
+            ensure your
+            voice comes
+            through clear during your lesson.
+        </p>
+        <div id="microphone-check" class="tech-microphone-backdrop">
+            <div class="microphone-check-modal">
+                <p class="microphone-check-text"><span>Read aloud:</span>The quick brown fox jumps over the lazy dog</p>
+                <p class="microphone-loading-text">Microphone Test in Progress...</p>
+                <div class="tech-spinner"></div>
+            </div>
+        </div>
+        <button id="micro-check-btn" class="tech-check-button">Check my microphone</button>
+    </div>
+    <div class="qr-result">
+        <p class="tech-instructions"><span>Great!</span> Your microphone is working perfectly.
+            <span>Simply click the button when you've completed the remaining tech-check steps, and you'll be swiftly
+                redirected to your meeting.</span>
+        </p>
+        <button class="qr-button">Proceed to Meeting</button>
+    </div>
+    <p id="microphone-failure-text" class="failure-tech-text">
+        <span>We encountered an issue while checking your microphone.</span> Don't worry, you can
+        join the
+        meeting directly
+        to perform the microphone check again. Please click <a id="failure-link" href="" target=" _blank"
+            class="tech-failure-link">here</a>
+        to
+        join the meeting and ensure your microphone is working properly.
+    </p>
+    <p class="qr-failure-message">Please, finish your remaining tech-check steps and try again</p>
+    <script type="module" src="./js/modules/setContactToFailedList.js"></script>
+    <script type="module" src="./js/modules/QRcode/microQRinterface.js"></script>
+</body>
+
+</html>

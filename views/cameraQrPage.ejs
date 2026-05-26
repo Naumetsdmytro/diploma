@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+    <h1 class="qr-title">Camera check</h1>
+    <div class="tech-camera-container qr-camera-container">
+        <p class="tech-instructions">Before we dive in, let's make sure your camera is good to go!
+            <span>It's simple
+                – just click the button below and strike a pose or show any reaction you
+                like!</span>
+        </p>
+        <div class="video-container">
+            <video id="video" autoplay muted></video>
+        </div>
+        <button id="camera-check-btn" class="tech-check-button">Check my camera</button>
+    </div>
+    <div class="qr-result">
+        <p class="tech-instructions"><span>Great!</span> Your camera is working perfectly.
+            <span>Simply click the button when you've completed the remaining tech-check steps, and you'll be swiftly
+                redirected to your meeting.</span>
+        </p>
+        <button class="qr-button">Proceed to Meeting</button>
+    </div>
+    <p id="camera-failure-text" class="failure-tech-text">
+        <span>We encountered an issue while checking your camera.</span> Don't worry, you can join
+        the meeting
+        directly
+        to perform the camera check again. Please click <a id="failure-link" href="" target="_blank"
+            class="tech-failure-link">here</a> to
+        join the meeting and ensure your camera is working properly.
+    </p>
+    <p class="qr-failure-message">Please, finish your remaining tech-check steps and try again</p>
+    <script type="module" src="./face-api-models/face-api.js"></script>
+    <script type="module" src="./js/modules/setContactToFailedList.js"></script>
+    <script type="module" src="./js/modules/QRcode/cameraQRinterface.js"></script>
+</body>
+
+</html>

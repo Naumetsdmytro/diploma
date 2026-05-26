@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eduquest</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+</head>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <div class="wrapper">
+                <div class="content">
+                    <div class="retry-check-container">
+                        <form class="retry-check-form">
+                            <p class="retry-form-text">Please, enter code you received in email</p>
+                            <div class="retry-form-subcontainer">
+                                <input type="text" id="ac-id" placeholder="Enter your code" name="acId"
+                                    class="form__input retry-form-input" required />
+                                <button type="submit" class="form__btn" name="retryButton">Check</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="no-eduquest">
+                        <div class="no-eduquest-container">
+                            <div class="no-eduquest-content">
+                                <img src="./images/logo.svg" class="logo" width="150" />
+                                <svg width="40" height="8" viewBox="0 0 40 8" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M4.00407 7.58829C2.99489 7.58829 2.12891 7.22689 1.40612 6.5041C0.683327 5.78131 0.321932 4.91533 0.321932 3.90615C0.321932 2.89697 0.683327 2.03099 1.40612 1.3082C2.12891 0.585407 2.99489 0.224012 4.00407 0.224012C5.01325 0.224012 5.87923 0.585407 6.60202 1.3082C7.32481 2.03099 7.68621 2.89697 7.68621 3.90615C7.68621 4.57439 7.51574 5.18808 7.1748 5.74722C6.8475 6.30636 6.40428 6.7564 5.84514 7.09734C5.29964 7.42464 4.68595 7.58829 4.00407 7.58829ZM19.8679 7.58829C18.8588 7.58829 17.9928 7.22689 17.27 6.5041C16.5472 5.78131 16.1858 4.91533 16.1858 3.90615C16.1858 2.89697 16.5472 2.03099 17.27 1.3082C17.9928 0.585407 18.8588 0.224012 19.8679 0.224012C20.8771 0.224012 21.7431 0.585407 22.4659 1.3082C23.1887 2.03099 23.5501 2.89697 23.5501 3.90615C23.5501 4.57439 23.3796 5.18808 23.0387 5.74722C22.7114 6.30636 22.2682 6.7564 21.709 7.09734C21.1635 7.42464 20.5498 7.58829 19.8679 7.58829ZM35.7318 7.58829C34.7226 7.58829 33.8567 7.22689 33.1339 6.5041C32.4111 5.78131 32.0497 4.91533 32.0497 3.90615C32.0497 2.89697 32.4111 2.03099 33.1339 1.3082C33.8567 0.585407 34.7226 0.224012 35.7318 0.224012C36.741 0.224012 37.607 0.585407 38.3298 1.3082C39.0526 2.03099 39.414 2.89697 39.414 3.90615C39.414 4.57439 39.2435 5.18808 38.9026 5.74722C38.5753 6.30636 38.132 6.7564 37.5729 7.09734C37.0274 7.42464 36.4137 7.58829 35.7318 7.58829Z"
+                                        fill="black" />
+                                </svg>
+                                <p class="no-eduquest-text">No upcoming Eduquest
+                                    <p />
+                            </div>
+                            <div class="image-noupcoming">
+                                <img class="noupcoming-image" src="./images/Illustration.png" alt="illustration" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="signIn">
+                        <img src="./images/logo.svg" class="logo" width="125" />
+                        <div class="heading">
+                            <div class="heading__subtitle">Welcome to</div>
+                            <h1 class="heading__title"></h1>
+                        </div>
+                        <form class="form">
+                            <div class="form__body">
+                                <div class="form__item">
+                                    <label class="form__label" for="name">Please put your first name AND last name below
+                                        (latin
+                                        characters
+                                        only)</label>
+                                    <input class="form__input" id="name" type="text" maxLength="64" minlength="2"
+                                        title="Your name (latin letters)" required name="name" autocomplete="name">
+                                </div>
+                                <div class="form__item email-container">
+                                    <label class="form__label" for="emailAddress">Please enter the email you used in
+                                        your registration form</label>
+                                    <input class="form__input" id="emailAddress" type="email" maxLength="64" required
+                                        pattern=".+@.+" name="email">
+                                </div>
+                            </div>
+                            <button class="form__btn" type="submit" name="joinButton">Join</button>
+                        </form>
+                        <div class="text-info">
+                            <p class="info-text">Dear Nobel applicants!</p>
+                            <p class="tech-list-title">For your EduQuest, please make sure that you join from a
+                                noise-free environment using:
+                            </p>
+                            <ul class="tech-list">
+                                <li class="tech-list-item"><img src="./images/laptop.svg" height="48" alt="laptop"><span
+                                        class="tech-list-text">A
+                                        PC/Laptop</span>
+                                </li>
+                                <li class="tech-list-item"><img src="./images/headset.svg" height="48"
+                                        alt="headset"><span class="tech-list-text">
+                                        A working headset/earphones</span></li>
+                                <li class="tech-list-item"><img src="./images/microphone.svg" height="48"
+                                        alt="microphone"><span class="tech-list-text">A
+                                        working mic</span></li>
+                                <li class="tech-list-item"><img src="./images/webcam.svg" height="48" alt="webcam">
+                                    <span class="tech-list-text">A working webcam</span>
+                                </li>
+                                <li class="tech-list-item"><img src="./images/router.svg" height="48"
+                                        alt="router-internet"><span class="tech-list-text">A
+                                        stable internet</span></li>
+                            </ul>
+                            <p> Participate actively and have a great time!
+                            </p>
+                        </div>
+                    </div>
+                    <div class="tech-check">
+                        <h3 class="tech-check-title">Prepare Your Tech</h3>
+                        <div class="tech-camera-container">
+                            <p class="tech-instructions">Before we dive in, let's make sure your camera is good to go!
+                                <span>It's simple
+                                    – just click the button below and strike a pose or show any reaction you
+                                    like!</span>
+                            </p>
+                            <div class="video-container">
+                                <video id="video" autoplay muted></video>
+                            </div>
+                            <button id="camera-check-btn" class="tech-check-button">Check my camera</button>
+                            <p id="qr-camera-text" class="qr-oportunity">Use another device for checking camera</p>
+                            <div id="qr-camera" class="qrcode-camera-backdrop">
+                                <div id="cameraQRcode" class="qrcode"></div>
+                                <p class="qrcode-instruction">Open camera or QR code scanner app on your mobile device.
+                                    Point your device's camera at the QR code on your screen, and follow the prompted
+                                    action to proceed.</p>
+                            </div>
+                        </div>
+                        <div class="tech-microphone-container">
+                            <p class="tech-instructions"><span>Great!</span> Your camera is working perfectly. Now,
+                                let's check your
+                                microphone.
+                                <span>Click the button and read aloud the displayed sentence.</span> We'll
+                                ensure your
+                                voice comes
+                                through clear during your lesson.
+                            </p>
+                            <div id="microphone-check" class="tech-microphone-backdrop">
+                                <div class="microphone-check-modal">
+                                    <p class="microphone-check-text"><span>Read aloud:</span>The quick brown fox jumps
+                                        over
+                                        the lazy dog</p>
+                                    <p class="microphone-loading-text">Microphone Test in Progress...</p>
+                                    <div class="tech-spinner"></div>
+                                </div>
+                            </div>
+                            <button id="micro-check-btn" class="tech-check-button">Check my microphone</button>
+                            <p id="qr-microphone-text" class="qr-oportunity">Use another device for checking microphone
+                            </p>
+                            <div id="qr-microphone" class="qrcode-microphone-backdrop">
+                                <div id="microphoneQRcode" class="qrcode"></div>
+                                <p class="qrcode-instruction">Open camera or QR code scanner app on your mobile device.
+                                    Point your device's camera at the QR code on your screen, and follow the prompted
+                                    action to proceed.</p>
+                            </div>
+                        </div>
+                        <p id="failure-text" class="failure-tech-text">
+                            <span>We encountered an issue while checking your technical equipment.</span> Don't worry,
+                            you can
+                            join the
+                            meeting directly
+                            to perform the check again. Please click <a id="failure-link" target="_blank"
+                                class="tech-failure-link">here</a> to
+                            join the meeting and ensure your technical equipment is working properly.
+                        </p>
+                        <div class="tech-audio-container">
+                            <p class="tech-instructions"><span>Great!</span> Your camera and microphone are working
+                                perfectly.
+                                <span>Now, let's check your headset.
+                                    After listening to the audio, please enter what you heard in the input field
+                                    below.</span>
+                                If you don't
+                                hear anything, please check your headset's connection, volume and try again!
+                            </p>
+                            <form class="audio-form">
+                                <p class="audio-failure-text">Please, listen carefully and try again!</p>
+                                <div class="audio-container">
+                                    <audio id="audio-check" class="audio" controls>
+                                        <source src="./images/audio.mp3" type="audio/mp3">
+                                    </audio>
+                                    <input type="text" class="audio-form-field" name="audioCheck"
+                                        placeholder="Enter what you heard">
+                                </div>
+                                <button id="audio-check-btn" class="tech-check-button">Check my Audio</button>
+                            </form>
+                            <p class="issues-audio-text">Follow the link below if you have issues with your audio</p>
+                            <a target="_blank" class="issues-audio-link">Go to the Tech meeting</a>
+                        </div>
+                    </div>
+                    <div class="countdown">
+                        <img src="./images/logo.svg" class="logo" width="135" alt="logo" />
+                        <h1 class="heading__title"></h1>
+                        <div class="countdown-body">
+                            <div class="days-hours">
+                                <div class="timer-value-container">
+                                    <span class="timer-value" data-days>00</span>
+                                    <span class="timer-value-text">Days</span>
+                                </div>
+                                <div class="timer-value-container">
+                                    <span class="timer-value" data-hours>00</span>
+                                    <span class="timer-value-text">Hours</span>
+                                </div>
+                            </div>
+                            <div class="minutes-seconds">
+                                <div class="timer-value-container">
+                                    <span class="timer-value" data-minutes>00</span>
+                                    <span class="timer-value-text">Minutes</span>
+                                </div>
+                                <div class="timer-value-container">
+                                    <span class="timer-value" data-seconds>00</span>
+                                    <span class="timer-value-text">Seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-info">
+                            <p class="info-text">Dear Nobel applicants!</p>
+                            <p class="tech-list-title">For your EduQuest, please make sure that you join from a
+                                noise-free environment using:
+                            </p>
+                            <ul class="tech-list">
+                                <li class="tech-list-item"><img src="./images/laptop.svg" height="48" alt="laptop"><span
+                                        class="tech-list-text">A
+                                        PC/Laptop</span>
+                                </li>
+                                <li class="tech-list-item"><img src="./images/headset.svg" height="48"
+                                        alt="headset"><span class="tech-list-text">
+                                        A working headset/earphones</span></li>
+                                <li class="tech-list-item"><img src="./images/microphone.svg" height="48"
+                                        alt="microphone"><span class="tech-list-text">A
+                                        working mic</span></li>
+                                <li class="tech-list-item"><img src="./images/webcam.svg" height="48" alt="webcam">
+                                    <span class="tech-list-text">A working webcam</span>
+                                </li>
+                                <li class="tech-list-item"><img src="./images/router.svg" height="48"
+                                        alt="router-internet"><span class="tech-list-text">A
+                                        stable internet</span></li>
+                            </ul>
+                            <p> Participate actively and have a great time!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <span id="spinner" class="spinner"></span>
+                <button type="button" id="googleSignInButton" class="signIn-google">Sign in with Google for
+                    Meet</button>
+                <p class="device-info-text">For an optimal learning experience, we advise accessing our EduQuest from a
+                    laptop or computer. These
+                    devices provide the necessary tools for our EduQuest. Thank you for understanding! </p>
+                <div class="image">
+                    <img src="./images/Illustration.png" alt="illustration" />
+                </div>
+            </div>
+        </div>
+        <img class="top-left" src="./images/top-left.svg" />
+        <img class="top-right" src="./images/top-right.svg" />
+        <img class="bottom-right" src="./images/bottom-right.svg" />
+        <img class="line" src="./images/line.png" />
+        <img class="blob" src="./images/blob.png" />
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="./face-api-models/face-api.js"></script>
+    <script type="module" src="./js/main.js"></script>
+    <script type="module" src="./js/modules/interfaceTechCheckLogic.js"></script>
+</body>
+
+</html>
